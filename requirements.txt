@@ -1,0 +1,10 @@
+numpy
+pandas
+scipy
+matplotlib
+notebook
+ipykernel
+qiskit==2.5.1
+qiskit-ibm-runtime==0.48.0
+qiskit-aer==0.17.2
+mthree==3.0.0
