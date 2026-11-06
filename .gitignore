@@ -1,0 +1,22 @@
+# Credentials and private physical-job artifacts
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+physical_manifest.csv
+qpu_job_ledger.csv
+readout_mitigation.npz
+results_*/
+# Local environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
