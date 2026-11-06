@@ -13,7 +13,7 @@ OUT = ROOT / "figures"
 OUT.mkdir(exist_ok=True)
 DATA = ROOT / "data" / "aggregated_realized_query_metrics.csv"
 df = pd.read_csv(DATA)
-required = {"delta","method","kR","qpa","success_rate","mean_simple_regret","actual_queries_per_arm"}
+required = {"delta","method","kR","qpa","success_rate","mean_simple_regret","mean_queries_per_arm_used"}
 missing = required - set(df.columns)
 if missing:
     raise ValueError(f"Missing columns: {sorted(missing)}")
@@ -28,7 +28,7 @@ for delta in [0.01,0.05,0.10]:
         for kr in range(11):
             q=d[(d.method=="theory_stream_dswap") & (d.kR==kr)].sort_values("qpa")
             if not q.empty:
-                ax.plot(q.actual_queries_per_arm,q[metric],"-o",
+                ax.plot(q.mean_queries_per_arm_used,q[metric],"-o",
                     color=plt.cm.viridis(.07+.87*kr/10),ms=3.5,lw=1.6,
                     label=rf"$k_R={kr}$")
         for method,label,color,ls,marker in [
@@ -37,7 +37,7 @@ for delta in [0.01,0.05,0.10]:
         ]:
             q=d[d.method==method].sort_values("qpa")
             if not q.empty:
-                ax.plot(q.actual_queries_per_arm,q[metric],
+                ax.plot(q.mean_queries_per_arm_used,q[metric],
                     color=color,ls=ls,marker=marker,lw=2.3,ms=5,label=label)
         ax.set_xscale("log")
         ax.set_xlabel("Mean realized logical oracle queries per arm")
