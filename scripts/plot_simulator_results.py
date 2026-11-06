@@ -1,0 +1,57 @@
+"""Rebuild statistical-simulation plots from saved aggregated results.
+
+Usage: python scripts/plot_simulator_results.py
+No IBM quantum hardware is accessed.
+"""
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / "figures"
+OUT.mkdir(exist_ok=True)
+DATA = ROOT / "data" / "aggregated_realized_query_metrics.csv"
+df = pd.read_csv(DATA)
+required = {"delta","method","kR","qpa","success_rate","mean_simple_regret","actual_queries_per_arm"}
+missing = required - set(df.columns)
+if missing:
+    raise ValueError(f"Missing columns: {sorted(missing)}")
+
+for delta in [0.01,0.05,0.10]:
+    d = df[np.isclose(df.delta, delta)]
+    for metric,kind,ylabel in [
+        ("success_rate","success","Exact best-arm success rate"),
+        ("mean_simple_regret","regret","Mean simple regret")
+    ]:
+        fig,ax = plt.subplots(figsize=(9,5.3))
+        for kr in range(11):
+            q=d[(d.method=="theory_stream_dswap") & (d.kR==kr)].sort_values("qpa")
+            if not q.empty:
+                ax.plot(q.actual_queries_per_arm,q[metric],"-o",
+                    color=plt.cm.viridis(.07+.87*kr/10),ms=3.5,lw=1.6,
+                    label=rf"$k_R={kr}$")
+        for method,label,color,ls,marker in [
+            ("sequential_halving","Sequential Halving","#b52e25","--","D"),
+            ("uniform_sampling","Uniform Sampling","#262626",":","s")
+        ]:
+            q=d[d.method==method].sort_values("qpa")
+            if not q.empty:
+                ax.plot(q.actual_queries_per_arm,q[metric],
+                    color=color,ls=ls,marker=marker,lw=2.3,ms=5,label=label)
+        ax.set_xscale("log")
+        ax.set_xlabel("Mean realized logical oracle queries per arm")
+        ax.set_ylabel(ylabel)
+        if metric=="success_rate":
+            ax.set_ylim(-.03,1.03)
+        else:
+            ax.set_ylim(bottom=0)
+        ax.set_title(rf"Statistical simulation | $\Delta_{{[2]}}={delta:.2f}$ | $n=1000$ | 50 seeds")
+        ax.grid(alpha=.22,which="both")
+        ax.legend(ncol=2,fontsize=7)
+        fig.tight_layout()
+        tag={0.01:"0p01",0.05:"0p05",0.10:"0p1"}[delta]
+        for ext in ["pdf","png"]:
+            fig.savefig(OUT/f"sim_{kind}_delta_{tag}.{ext}",dpi=180,bbox_inches="tight")
+        plt.close(fig)
+        print(f"Saved sim_{kind}_delta_{tag}.pdf")
